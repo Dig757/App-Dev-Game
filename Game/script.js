@@ -394,6 +394,9 @@ class MazeBuilder {
     var overlayBottom = document.querySelector(".overlay-bottom");
     overlayTop.classList.toggle("overlay-active");
     overlayBottom.classList.toggle("overlay-active");
+
+    console.log("Overlay toggled. Top active:", overlayTop.classList.contains("overlay-active"), 
+              "Bottom active:", overlayBottom.classList.contains("overlay-active"));
 }
 
 
@@ -429,8 +432,8 @@ class MazeBuilder {
     }
   
     if(nextStep.match(/exit/)) {
-        this.setMessage("Oeneri is standing in the doorway");
-        document.getElementById("moonLord").style.display = "block";
+      bossBattle();
+      return;
     }
   
     /* move hero one step */
@@ -447,7 +450,6 @@ class MazeBuilder {
     }
   
     if(nextStep.match(/exit/)) {
-      return;
     }
   
     if((this.heroScore >= 1) && !this.childMode) {
@@ -683,25 +685,73 @@ class MazeBuilder {
     }
   };
 
+  let boss = {
+    Phase1:{
+      name: "Oeneri",
+      LVL: 10,
+      HP: 40,
+      ATK: 20,
+      CR: 0.10,
+      DEF: 25,
+      MDEF: 15,
+      SPD: 999,
+      isBoss: true,
+      DamageDone: 0,
+      DamageTaken: 0,
+      isMagic: true,
+      isEnemy: true
+    },
+    Phase2:{
+      Body:{
+        name: "Overlord of the Chaos Domain, Oeneri",
+        LVL: 10,
+        HP: 40,
+        ATK: 20,
+        CR: 0.10,
+        DEF: 25,
+        MDEF: 15,
+        SPD: 999,
+        isBoss: true,
+        DamageDone: 0,
+        DamageTaken: 0,
+        isMagic: true,
+        isEnemy: true
+      },
+      Arms:{
+        name: "Arm of the Overlord",
+        LVL: 10,
+        HP: 40,
+        ATK: 20,
+        CR: 0.10,
+        DEF: 25,
+        MDEF: 15,
+        SPD: 999,
+        isBoss: true,
+        DamageDone: 0,
+        DamageTaken: 0,
+        isEnemy: true
+      }
+    },
+    Phase3:{
+      name: "Mind of Oeneri",
+        LVL: 10,
+        HP: 40,
+        ATK: 20,
+        CR: 0.10,
+        DEF: 25,
+        MDEF: 15,
+        SPD: 999,
+        isBoss: true,
+        DamageDone: 0,
+        DamageTaken: 0,
+        isMagic: true,
+        isEnemy: true
+    }
+  };
+
   //variable declarations
   var aliveHeroes, noOfEnemies, heroParty, enemy1, enemy2, enemy3, enemy4, enemy5, turnOrder = [],
-  buttonsDiv, button1, button2, button3, button4, button5;
-
-  function showBattleElements() {
-    document.getElementById("battle-area").style.display = "block";
-    document.getElementById("heroHealthBars").style.display = "block";
-    document.getElementById("turnOrderDisp").style.display = "block";
-    document.getElementById("btnDiv").style.display = "block";
-    document.getElementById("enemyHealthBars").style.display = "block";
-    document.getElementById("enemy1").style.display = "block";
-    document.getElementById("enemy2").style.display = "block";
-    document.getElementById("enemy3").style.display = "block";
-    document.getElementById("enemy4").style.display = "block";
-    document.getElementById("enemy5").style.display = "block";
-    document.getElementById("hero1").style.display = "block";
-    document.getElementById("hero2").style.display = "block";
-    document.getElementById("hero3").style.display = "block";
-  }
+  buttonsDiv, button1, button2, button3, button4, button5, bossPhase = 0;
 
   function initalizeBattle(){
     turnOrder = [];
@@ -717,6 +767,47 @@ class MazeBuilder {
     heroGIF();
     disableKeyboard();
     showBattleElements();
+  }
+
+  function bossBattle(){
+    showBattleElements();
+    disableDisplay();
+    bossPhase++;
+    turnOrder = []; //reset turn order
+    heroParty = structuredClone(Party);
+    heroesInParty = [heroParty.hero, heroParty.mage, heroParty.priest]; //note that this will not be here in the final version
+    //the array above will only be used when a companion has been met
+    //if the companion has been successfully recruited, just use heroesInParty.push(heroParty./*insert heroname*/);
+    //turn the Party./*heronamehere*/.fainted = false       Note that its Party and NOT heroParty
+    //we can add this when Jomari's part (hero recruit lines) is finished and we can include the heroes now
+
+    console.log("mi problemmo check");
+    aliveHeroes = heroesInParty;
+
+    if (heroesInParty.includes(heroParty.mage))
+    {
+      document.getElementById('mage').style.display = "block";
+    }
+    if (heroesInParty.includes(heroParty.priest))
+    {
+      document.getElementById('priest').style.display = "block";
+    }
+    console.log("mi problemmo check");
+  
+    bossSequenceDelcare();
+    setTurnOrder();
+    setEnemyNames();
+    createAtkEnemyBtn();
+    HealthDisplay();
+    updateTurnOrderDisp();
+    enemyTurnCheck();
+    hideVictory();
+    heroGIF();
+    disableKeyboard();
+  }
+
+  function showBattleElements() {
+    document.getElementById('wholeBattle').style.display = 'block';
   }
 
   function disableKeyboard() {
@@ -769,6 +860,39 @@ function disableDisplay(){
   //sets the enemy 4 and 5 disabled before rolling for the number of enemies
   document.getElementById('enemy4').style.display = "none";
   document.getElementById('enemy5').style.display = "none";
+}
+
+function bossSequenceDelcare(){
+  if (bossPhase == 1)
+  {
+    enemy1 = structuredClone(boss.Phase1);
+    noOfEnemies = 1;
+    document.getElementById('battle-area').style.display = "block";
+    document.getElementById('bossPhase1').style.display = "block";
+    document.getElementById('bossPhase2').style.display = "none";
+    document.getElementById('bossPhase3').style.display = "none";
+  }
+  else if (bossPhase == 2)
+  {
+    enemy1 = structuredClone(boss.Phase2.Arms);
+    enemy1.name = "Left " + enemy1.name;
+    enemy2 = structuredClone(boss.Phase2.Body);
+    enemy3 = structuredClone(boss.Phase2.Arms);
+    enemy3.name = "Right " + enemy3.name;
+    noOfEnemies = 3;
+    document.getElementById('bossPhase1').style.display = "none";
+    document.getElementById('bossPhase2').style.display = "block";
+    document.getElementById('bossPhase3').style.display = "none";
+    document.getElementById('battle-area').style.display = "block";
+  }
+  else if (bossPhase == 3)
+  {
+    enemy1 = structuredClone(boss.Phase3);
+    noOfEnemies = 1;
+    document.getElementById('bossPhase1').style.display = "none";
+    document.getElementById('bossPhase2').style.display = "none";
+    document.getElementById('bossPhase3').style.display = "block";
+  }
 }
 
 function enemyNoDeclaration(){
@@ -997,6 +1121,12 @@ function btnRemoval(removalID){
   }
 }
 
+let animationQueue = Promise.resolve();
+
+function queueAnimation(animation) {
+  animationQueue = animationQueue.then(animation);
+}
+
 // Update health bars
 function updateHealthBars() {
   // Update hero health bars
@@ -1068,65 +1198,68 @@ function updateHealthBars() {
   }
 
   function showHeroDeathAnimation(hero, heroType) {
-    const deathGifId = heroType + "-death-gif";
-    const deathGif = document.getElementById(deathGifId);
-    const backgroundOverlay = document.getElementById('background-overlay');
+    return new Promise(resolve => {
+      const deathGifId = heroType + "-death-gif";
+      const deathGif = document.getElementById(deathGifId);
+      const backgroundOverlay = document.getElementById('background-overlay');
+  
+      // Check if the death GIF element exists and if the hero is not already dead
+      if (deathGif && !hero.isDead) {
+        // Set the position of the death GIF to the center of the viewport
+        deathGif.style.position = 'absolute';
+        deathGif.style.top = '50%';
+        deathGif.style.left = '50%';
+        deathGif.style.transform = 'translate(-50%, -50%)';
+        deathGif.style.zIndex = '1000';
+        deathGif.style.imageRendering = 'pixelated';
+  
+        // Display the background overlay
+        backgroundOverlay.style.display = 'block';
+          deathGif.style.display = 'block';
 
-    // Check if the death GIF element exists and if the hero is not already dead
-    if (deathGif && !hero.isDead) {
-      // Set the position of the death GIF to the center of the viewport
-      deathGif.style.position = 'fixed';
-      deathGif.style.top = '50%';
-      deathGif.style.left = '50%';
-      deathGif.style.transform = 'translate(-50%, -50%)';
-      deathGif.style.zIndex = '1000';
-      deathGif.style.imageRendering = 'pixelated';
-
-      // Display the background overlay
-      backgroundOverlay.style.display = 'block';
-
-      // Display the death GIF after a short delay to ensure background overlay is visible
-      setTimeout(function() {
-        deathGif.style.display = 'block';
-
-        // Hide the death GIF and the background overlay after a short delay
-        setTimeout(function() {
-          deathGif.style.display = 'none';
-          backgroundOverlay.style.display = 'none';
-        }, 1000); // Adjust the time as needed
-      }, 100); // Adjust the time as needed
-
-      // Set the hero as dead
-      hero.isDead = true;
-    }
+          // Hide the death GIF and the background overlay after a short delay
+          setTimeout(() => {
+            deathGif.style.display = 'none';
+            backgroundOverlay.style.display = 'none';
+            resolve(); // Resolve the promise when the animation is done
+          }, 1000); // Adjust the time as needed 
+        // Set the hero as dead
+        hero.isDead = true;
+      } else {
+        resolve(); // Resolve immediately if no animation needs to be played
+      }
+    });
   }
-
+  
   function showEnemyDeathAnimation(enemy) {
-    const deathGifId = enemy.type + "-death-gif";
-    const deathGif = document.getElementById(deathGifId);
-    const backgroundOverlay = document.getElementById('enemyBackground-overlay');
-  
-    // Set the position of the death GIF to the center of the screen
-    deathGif.style.position = 'absolute';
-    deathGif.style.top = '50%';
-    deathGif.style.left = '50%';
-    deathGif.style.transform = 'translate(-50%, -50%) scaleX(-1)';
-    deathGif.style.zIndex = '1000';
-    deathGif.style.imageRendering = 'pixelated'; // Add image-rendering property
-  
-    if (deathGif && !enemy.isDead) { // Check if the enemy is not already dead
-      backgroundOverlay.style.display = 'block';
-      deathGif.style.display = 'block';
-      setTimeout(function() {
-        deathGif.style.display = 'none';
-        backgroundOverlay.style.display = 'none';
+    return new Promise(resolve => {
+      const deathGifId = enemy.type + "-death-gif";
+      const deathGif = document.getElementById(deathGifId);
+      const backgroundOverlay = document.getElementById('enemyBackground-overlay');
+    
+      if (deathGif && !enemy.isDead) { // Check if the enemy is not already dead
+        // Set the position of the death GIF to the center of the screen
+        deathGif.style.position = 'absolute';
+        deathGif.style.top = '50%';
+        deathGif.style.left = '50%';
+        deathGif.style.transform = 'translate(-50%, -50%) scaleX(-1)';
+        deathGif.style.zIndex = '1000';
+        deathGif.style.imageRendering = 'pixelated'; // Add image-rendering property
+    
+          deathGif.style.display = 'block';
+          backgroundOverlay.style.display = 'block';
+          setTimeout(() => {
+            deathGif.style.display = 'none';
+            backgroundOverlay.style.display = 'none';
+            resolve(); // Resolve the promise when the animation is done
+          }, 1000); // Adjust the time as needed
         enemy.isDead = true; // Set the enemy as dead after the death animation is played
-  
-      }, 1000); // Adjust the time as needed
-    }
+      } else {
+        resolve(); // Resolve immediately if no animation needs to be played
+      }
+    });
   }
 }
-
 
 
 // Update damage counts
@@ -1231,20 +1364,7 @@ function checkVictory() {
 
   // Function to hide all elements related to the battle system
   function hideBattleElements() {
-  document.getElementById("battle-area").style.display = "none";
-  document.getElementById("heroHealthBars").style.display = "none";
-  document.getElementById("turnOrderDisp").style.display = "none";
-  document.getElementById("btnDiv").style.display = "none";
-  document.getElementById("enemyHealthBars").style.display = "none";
-  document.getElementById("enemy1").style.display = "none";
-  document.getElementById("enemy2").style.display = "none";
-  document.getElementById("enemy3").style.display = "none";
-  document.getElementById("enemy4").style.display = "none";
-  document.getElementById("enemy5").style.display = "none";
-  document.getElementById("hero1").style.display = "none";
-  document.getElementById("hero2").style.display = "none";
-  document.getElementById("hero3").style.display = "none";
-  document.getElementById("background-overlay").style.display = "none";
+  document.getElementById('wholeBattle').style.display = 'none';
 }
 
   function displayLostLifeMessage() {
@@ -1273,21 +1393,40 @@ function checkVictory() {
   }, 4000); // Display the message for 4 seconds
 }
 
-  if (heroParty.hero.Fainted && heroParty.mage.Fainted && heroParty.priest.Fainted)
-     {
-    // Display the lost life message
+function handleDefeat() {
+  // Remove buttons
+  let btnToRemove = ["btn1", "btn2", "btn3"];
+  btnToRemove.forEach(function(btnId) {
+    let btnRemove = document.getElementById(btnId);
+    if (btnRemove) {
+      buttonsDiv.removeChild(btnRemove);
+    }
+  });
+
+  // Toggle overlay after a delay
+  setTimeout(function() {
+    toggleOverlay();
+
+    // Display lost life message
+    setTimeout(function() {
       displayLostLifeMessage();
-      hideBattleElements();
-      enableKeyboard();
-      for (let a in btnToRemove)
-        {
-          let btnRemove = document.getElementById(btnToRemove[a]);
-          if(btnRemove)
-          {
-            buttonsDiv.removeChild(btnRemove);
-          }
-        };
-}else if (enemy1.HP <= 0 && enemy2.HP <= 0 && enemy3.HP <= 0) {
+
+      // Hide battle elements and toggle overlay after showing the message
+      setTimeout(function() {
+        hideBattleElements();
+        toggleOverlay();
+      }, 2500); // Display the message for 2.5 seconds
+    }, 500); // Delay slightly to ensure overlay is shown before displaying message
+  }, 2000); // Adjust this delay as needed
+
+  // Enable keyboard after all actions
+  setTimeout(enableKeyboard, 4500); // Slightly after all actions to ensure consistency
+}
+
+if (heroParty.hero.Fainted && heroParty.mage.Fainted && heroParty.priest.Fainted) {
+  handleDefeat();
+}
+else if (enemy1.HP <= 0 && enemy2.HP <= 0 && enemy3.HP <= 0) {
     //checks if enemy 1, 2, 3 are dead
     if (noOfEnemies > 3) {
       //checks if theres 4 or 5 enemies
@@ -1339,8 +1478,33 @@ function partyLVLUP()
   Party.hero.MDEF += Math.floor(Math.random() * 2);
   Party.mage.MDEF += Math.floor(Math.random() * 5);
   Party.priest.MDEF += Math.floor(Math.random() * 4);
-  
 
+  //boss scaling
+  boss.Phase1.LVL++;
+  boss.Phase2.Body.LVL++;
+  boss.Phase2.Arms.LVL++;
+  boss.Phase3.LVL++;
+  
+  boss.Phase1.HP += Math.ceil(Math.random() * 6) + 3;
+  boss.Phase1.ATK += Math.ceil(Math.random() * 4);
+  boss.Phase1.DEF += Math.floor(Math.random() * 4);
+  boss.Phase1.MDEF += Math.floor(Math.random() * 4);
+
+  boss.Phase2.Body.HP += Math.ceil(Math.random() * 10) + 7;
+  boss.Phase2.Body.ATK += Math.ceil(Math.random() * 4);
+  boss.Phase2.Body.DEF += Math.floor(Math.random() * 4);
+  boss.Phase2.Body.MDEF += Math.floor(Math.random() * 4);
+
+  boss.Phase2.Arms.HP += Math.ceil(Math.random() * 8) + 5;
+  boss.Phase2.Arms.ATK += Math.ceil(Math.random() * 4);
+  boss.Phase2.Arms.DEF += Math.floor(Math.random() * 4);
+  boss.Phase2.Arms.MDEF += Math.floor(Math.random() * 4);
+
+  boss.Phase3.HP += Math.ceil(Math.random() * 4) + 1;
+  boss.Phase3.ATK += Math.ceil(Math.random() * 6) + 1;
+  boss.Phase3.DEF += Math.floor(Math.random() * 2);
+  boss.Phase3.MDEF += Math.floor(Math.random() * 3);
+  
   //enemies
   if (Party.hero.LVL != 2) //enemy scaling starts after hero lvl 2
   {
@@ -1492,50 +1656,62 @@ function atkEnemy(enemyNumber) {
   });
 }
 
-// Function to play enemy attack animation
+let enemyAttackInProgress = false;
+
 function playEnemyAttackAnimation(enemyType) {
-  const enemyGifElement = document.getElementById(enemyType + '-attack-gif');
-  const backgroundOverlay = document.getElementById('enemyBackground-overlay');
+  return new Promise(resolve => {
+    const enemyGifElement = document.getElementById(enemyType + '-attack-gif');
+    const backgroundOverlay = document.getElementById('enemyBackground-overlay');
 
-  // Set the position of the attack GIF to the center of the screen
-  enemyGifElement.style.position = 'absolute';
-  enemyGifElement.style.top = '50%';
-  enemyGifElement.style.left = '50%';
-  enemyGifElement.style.transform = 'translate(-50%, -50%) scaleX(-1)';
-  enemyGifElement.style.zIndex = '1000';
+    // Set the position of the attack GIF to the center of the screen
+    enemyGifElement.style.position = 'absolute';
+    enemyGifElement.style.top = '50%';
+    enemyGifElement.style.left = '50%';
+    enemyGifElement.style.transform = 'translate(-50%, -50%) scaleX(-1)';
+    enemyGifElement.style.zIndex = '1000';
 
-  backgroundOverlay.style.display = 'block';
-  enemyGifElement.style.display = 'block'; // Show the attack GIF
+    backgroundOverlay.style.display = 'block';
+    enemyGifElement.style.display = 'block'; // Show the attack GIF
 
-  setTimeout(() => {
-    enemyGifElement.style.display = 'none'; // Hide the attack GIF after a short delay
-    backgroundOverlay.style.display = 'none';
-  }, 1000); // Adjust the delay as needed
+    setTimeout(() => {
+      enemyGifElement.style.display = 'none'; // Hide the attack GIF after a short delay
+      backgroundOverlay.style.display = 'none';
+      enemyAttackInProgress = false; // Reset the flag after the animation is done
+      resolve(); // Resolve the promise when the animation is done
+    }, 1000); // Adjust the delay as needed
+  });
 }
 
-function enemyAttack(Attacker) {
-  return new Promise(resolve => {
-    console.log(turnOrder[0].name);
-    let atked = Math.floor(Math.random() * aliveHeroes.length);
-    console.log("Index of attacked: " + atked);
-    switch(atked) {
-      case 0:
-        atkHeroParty(Attacker, aliveHeroes[0]);
-        break;
-      case 1:
-        atkHeroParty(Attacker, aliveHeroes[1]);
-        break;
-      case 2:
-        atkHeroParty(Attacker, aliveHeroes[2]);
-        break;
-      case 3:
-        atkHeroParty(Attacker, aliveHeroes[3]);
-        break;
-    }
-    // Play enemy attack animation and resolve the promise after animation
-    playEnemyAttackAnimation(Attacker.type);
-    setTimeout(resolve, 1000); // Set a delay after the animation
-  });
+async function enemyAttack(Attacker) {
+  // Check if an enemy attack animation is already in progress
+  if (enemyAttackInProgress) {
+    // If an animation is in progress, wait for it to finish before starting a new one
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Adjust the delay as needed
+  }
+
+  // Set the flag to indicate that an enemy attack animation is now in progress
+  enemyAttackInProgress = true;
+
+  console.log(turnOrder[0].name);
+  let atked = Math.floor(Math.random() * aliveHeroes.length);
+  console.log("Index of attacked: " + atked);
+  switch(atked) {
+    case 0:
+      atkHeroParty(Attacker, aliveHeroes[0]);
+      break;
+    case 1:
+      atkHeroParty(Attacker, aliveHeroes[1]);
+      break;
+    case 2:
+      atkHeroParty(Attacker, aliveHeroes[2]);
+      break;
+    case 3:
+      atkHeroParty(Attacker, aliveHeroes[3]);
+      break;
+  }
+
+  // Play enemy attack animation and resolve the promise after animation
+  await playEnemyAttackAnimation(Attacker.type);
 }
 
 
@@ -1601,6 +1777,115 @@ updateDamageCounts();
 updateHealthBars();
 checkVictory();
 }
+
+//Title Screen JS Start
+// Array of dialog texts
+const dialogTexts = [
+  "The Chaos Domain was once crowned as the place of beginnings, a place named after the supreme element of Chaos, even superior to the Time and Space Domains. From mortals to immortals, everyone lived harmoniously, adhering to the commands of the Supreme Order of Chaos...",
+  "Every race prospered in the reign of the Supreme Emperor of Chaos, the head of the Supreme Order and the wielder of the Divine Sword Omega. But a disaster struck that began the agony of the myriad races...",
+  "The Supreme Emperor of Chaos ascended to Godhood and left his descendants to handle the matters of the domain. This caused a massive fight between the children, and allowed the anomaly to attack...",
+  "With the war remains that was left from the internal war of the Supreme Order, the Divine Emperor of Death, Oeneri comprehended the Law of Chaos, this led him to gather his forces and launch an all out war with the exhausted force of the Order...",
+  "The Army of Death ultimately defeated the current Chaos Order, and for hundreds of years, the Chaos Domain was renamed to be Chaos' Domain, a place controlled by one person. The former glorious domain was now a desolate place filled with death and chaos..."
+];
+
+let currentDialogIndex = 0;
+let dialogCompleted = false;
+
+function startNewGame() {
+  toggleOverlay();
+  setTimeout(() => {
+      toggleOverlay();
+      document.querySelector(".chaos-domain").classList.add("bg2");
+      document.getElementById("mainDialog").style.display = "block";
+      typeWriter(dialogTexts[currentDialogIndex]);
+  }, 1000);
+
+  console.log("Starting new game...");
+  document.querySelector(".title").style.display = "none";
+  document.querySelector(".subtitle").style.display = "none";
+  document.querySelector(".sword").style.display = "none";
+  document.querySelector(".button-container").style.display = "none";
+}
+
+function openSettings() {
+  console.log("Opening settings...");
+  toggleOverlay();
+}
+
+function exitGame() {
+  console.log("Exiting game...");
+  toggleOverlay();
+}
+
+function toggleOverlay() {
+  var overlayTop = document.querySelector(".overlay-top");
+  var overlayBottom = document.querySelector(".overlay-bottom");
+  overlayTop.classList.toggle("overlay-active");
+  overlayBottom.classList.toggle("overlay-active");
+}
+
+document.getElementById("mainDialog").addEventListener("click", function() {
+  if (dialogCompleted && currentDialogIndex < dialogTexts.length - 1) {
+      currentDialogIndex++;
+      toggleOverlay();
+      setTimeout(() => {
+          toggleOverlay();
+          const chaosDomain = document.querySelector(".chaos-domain");
+
+          if (currentDialogIndex === 1) {
+              chaosDomain.classList.add("bg3");
+          } else if (currentDialogIndex === 2) {
+              chaosDomain.classList.remove("bg3");
+              chaosDomain.classList.add("bg4");
+          } else if (currentDialogIndex === 3) {
+              chaosDomain.classList.remove("bg4");
+              chaosDomain.classList.add("bg5");
+          } else if (currentDialogIndex === 4) {
+              chaosDomain.classList.remove("bg5");
+              chaosDomain.classList.add("bg6");
+          }
+
+          document.getElementById("mainDialog").textContent = "";
+          dialogCompleted = false; // Reset dialog completion state
+          setTimeout(() => {
+              typeWriter(dialogTexts[currentDialogIndex]);
+          }, 100);
+      }, 1000);
+  }else if (dialogCompleted && currentDialogIndex === 4) {
+    // Dialog index is 4, show the maze and hide the title screen
+    toggleOverlay();
+    setTimeout(() => {
+        toggleOverlay();
+        hideTitleScreen();
+        showMaze();
+    }, 1000);
+}
+});
+
+function showMaze() {
+  console.log("All dialogues finished. Showing maze...");
+  document.getElementById("maze_container").style.display = "block"; // Show maze container
+}
+
+function hideTitleScreen() {
+  console.log("Hiding title screen...");
+  document.getElementById("title-screen").style.display = "none";
+}
+
+function typeWriter(text) {
+  const dialogElement = document.getElementById("mainDialog");
+  let charIndex = 0;
+  const typing = setInterval(() => {
+      if (charIndex === text.length) {
+          clearInterval(typing);
+          dialogCompleted = true; // Mark dialog as completed
+      } else {
+          dialogElement.textContent += text.charAt(charIndex);
+          charIndex++;
+      }
+  }, 2);
+}
+// Title Screen JS End
 
 
 
